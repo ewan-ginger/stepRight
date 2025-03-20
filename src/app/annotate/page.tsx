@@ -8,6 +8,16 @@ import { getPatient } from '@/lib/patients'
 import { getImage } from '@/lib/images'
 import CanvasComponent from '@/components/canvas/Canvas'
 import type { Patient, Image } from '@/types/database'
+import { useRouter } from 'next/navigation'
+import { Card } from '@/components/ui/Card'
+
+// Match the step enum in the landing page
+enum Step {
+  SELECT_PATIENT,
+  UPLOAD_XRAYS,
+  EDGE_DETECTION,
+  ANNOTATION
+}
 
 export default function AnnotatePage() {
   const searchParams = useSearchParams()
@@ -21,6 +31,7 @@ export default function AnnotatePage() {
   const [activeView, setActiveView] = useState<'top' | 'side'>('top')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,10 +99,72 @@ export default function AnnotatePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link href="/" className="text-blue-500 hover:underline">
-          ← Back to Home
-        </Link>
+      <div className="flex justify-between items-center mb-6">
+        <button 
+          onClick={() => router.back()} 
+          className="text-blue-500 hover:underline flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Edge Detection
+        </button>
+      </div>
+      
+      {/* Patient information card */}
+      <Card className="p-4 mb-4 bg-blue-50 border border-blue-100">
+        <div className="flex items-center">
+          <div>
+            <h3 className="font-semibold text-blue-800">Patient</h3>
+            <p className="text-blue-600">{patient.name}, {patient.medicalRecordNumber || 'No MRN'}</p>
+          </div>
+        </div>
+      </Card>
+      
+      {/* Step indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center">
+          {/* Step 1: Select Patient */}
+          <div className={`flex items-center text-blue-600`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-2`}>
+              1
+            </div>
+            <span className="font-medium">Select Patient</span>
+          </div>
+          
+          {/* Connector */}
+          <div className={`flex-1 h-0.5 mx-4 bg-blue-600`}></div>
+          
+          {/* Step 2: Upload X-rays */}
+          <div className={`flex items-center text-blue-600`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-2`}>
+              2
+            </div>
+            <span className="font-medium">Upload X-rays</span>
+          </div>
+          
+          {/* Connector */}
+          <div className={`flex-1 h-0.5 mx-4 bg-blue-600`}></div>
+          
+          {/* Step 3: Edge Detection */}
+          <div className={`flex items-center text-blue-600`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-2`}>
+              3
+            </div>
+            <span className="font-medium">Edge Detection</span>
+          </div>
+          
+          {/* Connector */}
+          <div className={`flex-1 h-0.5 mx-4 bg-blue-600`}></div>
+          
+          {/* Step 4: Annotation (current step) */}
+          <div className={`flex items-center text-blue-600`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white mr-2`}>
+              4
+            </div>
+            <span className="font-medium">Annotation</span>
+          </div>
+        </div>
       </div>
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
