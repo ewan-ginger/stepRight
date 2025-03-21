@@ -12,6 +12,7 @@ enum Step {
   SELECT_PATIENT,
   UPLOAD_XRAYS,
   EDGE_DETECTION,
+  EDGE_REFINEMENT,
   ANNOTATION
 }
 
@@ -37,12 +38,37 @@ export default function Home() {
 
   // Handle image upload completion
   const handleUploadComplete = (topViewImage: Image, sideViewImage: Image) => {
+    // Verify we have the correct image types before proceeding
+    if (topViewImage.viewType !== 'top' || sideViewImage.viewType !== 'side') {
+      console.error('Image type mismatch:', {
+        expectedTopView: 'top', 
+        actualTopView: topViewImage.viewType,
+        expectedSideView: 'side', 
+        actualSideView: sideViewImage.viewType
+      });
+    }
+    
     setUploadedImages({
       topView: topViewImage,
       sideView: sideViewImage
     })
     
+    console.log('Completed image upload with:', {
+      topView: {
+        id: topViewImage.id,
+        viewType: topViewImage.viewType,
+        url: topViewImage.url
+      },
+      sideView: {
+        id: sideViewImage.id,
+        viewType: sideViewImage.viewType,
+        url: sideViewImage.url
+      }
+    });
+    
     // Navigate to the edge detection page with query parameters
+    // Make sure we're sending the side view image ID for sideView parameter
+    // and top view image ID for topView parameter
     router.push(`/edge-detection?patient=${selectedPatient?.id}&topView=${topViewImage.id}&sideView=${sideViewImage.id}`)
   }
 
@@ -107,9 +133,26 @@ export default function Home() {
           </div>
           
           {/* Connector */}
+          <div className={`flex-1 h-0.5 mx-4 ${currentStep >= Step.EDGE_REFINEMENT ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+          
+          {/* Step 4: Edge Refinement */}
+          <div className={`flex items-center ${currentStep >= Step.EDGE_REFINEMENT ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+              currentStep === Step.EDGE_REFINEMENT 
+                ? 'bg-blue-600 text-white' 
+                : currentStep > Step.EDGE_REFINEMENT 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'bg-gray-100 text-gray-400'
+            } mr-2`}>
+              {currentStep > Step.EDGE_REFINEMENT ? '✓' : '4'}
+            </div>
+            <span className="font-medium">Edge Refinement</span>
+          </div>
+          
+          {/* Connector */}
           <div className={`flex-1 h-0.5 mx-4 ${currentStep >= Step.ANNOTATION ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
           
-          {/* Step 4: Annotation */}
+          {/* Step 5: Annotation */}
           <div className={`flex items-center ${currentStep >= Step.ANNOTATION ? 'text-blue-600' : 'text-gray-400'}`}>
             <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
               currentStep === Step.ANNOTATION 
@@ -118,7 +161,7 @@ export default function Home() {
                   ? 'bg-green-100 text-green-600' 
                   : 'bg-gray-100 text-gray-400'
             } mr-2`}>
-              {currentStep > Step.ANNOTATION ? '✓' : '4'}
+              {currentStep > Step.ANNOTATION ? '✓' : '5'}
             </div>
             <span className="font-medium">Annotation</span>
           </div>

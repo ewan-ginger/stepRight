@@ -84,6 +84,7 @@ export async function getImage(id: string): Promise<Image | null> {
   return new Promise(resolve => {
     setTimeout(() => {
       const image = mockImages.find(img => img.id === id) || null
+      console.log(`getImage(${id}) -> viewType:`, image?.viewType, 'url:', image?.url)
       resolve(image)
     }, 200)
   })
@@ -98,19 +99,34 @@ export async function uploadImage(file: File, patientId: string, viewType: 'top'
   // Create a mock URL for development
   const objectURL = URL.createObjectURL(file)
   
+  console.log(`Uploading image for patient ${patientId}, viewType: ${viewType} with filename: ${file.name}`);
+  
+  // Ensure the ID is unique by combining timestamp and viewType
+  const timestamp = Date.now();
+  const uniqueId = `${viewType}_${timestamp}`;
+  
   const newImage: Image = {
-    id: String(mockImages.length + 1),
+    id: uniqueId,
     patientId,
     url: objectURL, // In production, this would be the CDN URL
-    viewType,
+    viewType, // Ensure this is correctly set
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
+  
+  console.log(`Created new image:`, {
+    id: newImage.id,
+    patientId: newImage.patientId,
+    viewType: newImage.viewType,
+    filename: file.name,
+    createdAt: newImage.createdAt
+  });
   
   return new Promise(resolve => {
     // Simulate a delay for upload
     setTimeout(() => {
       mockImages.push(newImage)
+      console.log(`Successfully uploaded ${viewType} image with ID ${newImage.id}`);
       resolve(newImage)
     }, 1000)
   })

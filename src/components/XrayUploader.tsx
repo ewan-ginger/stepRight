@@ -46,14 +46,67 @@ export default function XrayUploader({ patient, onComplete }: XrayUploaderProps)
       setLoading(true)
       setError(null)
 
+      console.log('Starting image upload process for:', {
+        patient: patient.id,
+        topViewFile: topViewFile.name,
+        sideViewFile: sideViewFile.name
+      })
+
+      // Add specific type markers to filenames to ensure correct classification
+      const topViewFileWithType = new File(
+        [topViewFile], 
+        `top_${topViewFile.name}`, 
+        { type: topViewFile.type }
+      );
+      
+      const sideViewFileWithType = new File(
+        [sideViewFile], 
+        `side_${sideViewFile.name}`, 
+        { type: sideViewFile.type }
+      );
+
       // Upload both images in parallel
       const [topViewImage, sideViewImage] = await Promise.all([
-        uploadImage(topViewFile, patient.id, 'top'),
-        uploadImage(sideViewFile, patient.id, 'side')
+        uploadImage(topViewFileWithType, patient.id, 'top'),
+        uploadImage(sideViewFileWithType, patient.id, 'side')
       ])
 
-      onComplete(topViewImage, sideViewImage)
+      // Force viewType to be correct regardless of what came back
+      const correctedTopView = {
+        ...topViewImage,
+        viewType: 'top' as const
+      };
+      
+      const correctedSideView = {
+        ...sideViewImage,
+        viewType: 'side' as const
+      };
+
+      // Verify the returned images have the correct viewType
+      console.log('Uploaded images with details:', {
+        topView: {
+          id: correctedTopView.id,
+          viewType: correctedTopView.viewType,
+          url: correctedTopView.url
+        },
+        sideView: {
+          id: correctedSideView.id,
+          viewType: correctedSideView.viewType,
+          url: correctedSideView.url
+        }
+      })
+
+      // Make sure the viewTypes are correctly set
+      if (correctedTopView.id === correctedSideView.id) {
+        console.error('Error: Top view and side view images have the same ID!');
+        setError('The system generated the same ID for both images. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      onComplete(correctedTopView, correctedSideView)
     } catch (err) {
+      console.error('Error uploading images:', err)
       setError(err instanceof Error ? err.message : 'Failed to upload images')
     } finally {
       setLoading(false)
